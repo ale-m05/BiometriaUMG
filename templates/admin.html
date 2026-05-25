@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2 class="mb-4">Panel Administrativo</h2>
+
+<hr class="my-4">
+
+<div class="card p-4 shadow-sm">
+    <h4>Gestionar Roles (últimas personas)</h4>
+
+    <table class="table table-sm mt-3">
+        <thead>
+            <tr>
+                <th>Carnet</th>
+                <th>Nombre</th>
+                <th>Roles activos</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for p in recent_personas %}
+            <tr>
+                <td>{{ p.carnet or '-' }}</td>
+                <td>{{ p.nombre }} {{ p.apellido }}</td>
+                <td>
+                    {% if p.active_roles and p.active_roles|length > 0 %}
+                        {% for r in p.active_roles %}
+                            <div class="badge bg-secondary me-1">
+                                {{ r.tipo_persona }}
+                                {% if r.carrera_nombre %} - {{ r.carrera_nombre }}{% endif %}
+                                {% if r.seccion_nombre %} / {{ r.seccion_nombre }}{% endif %}
+                                <form method="post" action="{{ url_for('end_role_persona', id_persona=p.id_persona, id_rol=r.id_rol_persona) }}" style="display:inline;">
+                                    <button class="btn btn-sm btn-outline-light ms-2" type="submit">Finalizar</button>
+                                </form>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <em>Sin roles activos</em>
+                    {% endif %}
+                </td>
+                <td>
+                    <!-- Formulario promover -->
+                    <form method="post" action="{{ url_for('promover_persona', id_persona=p.id_persona) }}" class="d-inline">
+                        <select name="nuevo_rol" class="form-select form-select-sm d-inline-block" style="width:auto;">
+                            <option value="catedratico">Catedrático</option>
+                            <option value="administrativo">Administrativo</option>
+                            <option value="estudiante">Estudiante</option>
+                        </select>
+                        <select name="carrera" class="form-select form-select-sm d-inline-block ms-1" style="width:auto;">
+                            <option value="">-- Carrera --</option>
+                            {% for c in carrera_options %}
+                                <option value="{{ c }}" {% if p.active_roles and p.active_roles|length>0 and p.active_roles[0].carrera_nombre==c %}selected{% endif %}>{{ c }}</option>
+                            {% endfor %}
+                        </select>
+                        <input type="hidden" name="seccion" value="{% if p.active_roles and p.active_roles|length>0 %}{{ p.active_roles[0].seccion_nombre or '' }}{% else %}{% endif %}">
+                        <input type="hidden" name="crear_usuario" value="0">
+                        <button class="btn btn-sm btn-primary ms-1" type="submit">Promover</button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+</div>
+
+{% endblock %}

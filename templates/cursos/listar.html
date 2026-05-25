@@ -1,0 +1,103 @@
+﻿{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3>Gestión de Cursos</h3>
+        <a href="{{ url_for('crear_curso') }}" class="btn btn-primary">Asignar Curso</a>
+    </div>
+
+    <!-- Buscador de Cursos -->
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <h5>Buscar Cursos</h5>
+            <form method="GET" id="buscarForm">
+                <div class="row">
+                    <div class="col-md-4">
+                        <label class="form-label">Sede</label>
+                        <select name="id_sede" id="sedeSelect" class="form-select" required>
+                            <option value="">Seleccione una sede</option>
+                            {% for sede in sede_options %}
+                            <option value="{{ sede.id_sede }}" {{ 'selected' if id_sede == sede.id_sede|string else '' }}>{{ sede.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Carrera</label>
+                        <select name="carrera" id="carreraSelect" class="form-select">
+                            <option value="">Seleccione una carrera</option>
+                            {% for car in carrera_options %}
+                            <option value="{{ car }}" {{ 'selected' if carrera == car else '' }}>{{ car }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Listado de Cursos -->
+    {% if cursos %}
+    <div class="card shadow">
+        <div class="card-body">
+            <table class="table table-bordered table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Curso</th>
+                        <th>Carrera</th>
+                        <th>Sede</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for curso in cursos %}
+                    <tr>
+                        <td>{{ curso[1] }}</td>
+                        <td>{{ curso[2] if curso[2] else '-' }}</td>
+                        <td>{{ curso[3] if curso[3] else '-' }}</td>
+                        <td>
+                            <a href="{{ url_for('inscribir_estudiantes', id_curso=curso[0]) }}" class="btn btn-sm btn-success">
+                                Inscribir alumnos
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    {% if id_sede and carrera %}
+    <div class="alert alert-info" role="alert">
+        No hay cursos disponibles para la sede y carrera seleccionadas.
+    </div>
+    {% endif %}
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const sedeSelect = document.querySelector('#sedeSelect');
+    const carreraSelect = document.querySelector('#carreraSelect');
+    const buscarForm = document.querySelector('#buscarForm');
+
+    sedeSelect.addEventListener('change', (e) => {
+        carreraSelect.innerHTML = '<option value="">Seleccione una carrera</option>';
+        document.querySelector('#cursoSelect').innerHTML = '<option value="">Seleccione un curso</option>';
+
+        // Only submit when the change was initiated by the user (not programmatic)
+        if (e.isTrusted && sedeSelect.value) {
+            buscarForm.submit();
+        }
+    });
+
+    carreraSelect.addEventListener('change', (e) => {
+        if (e.isTrusted && sedeSelect.value && carreraSelect.value) {
+            buscarForm.submit();
+        }
+    });
+});
+</script>
+{% endblock %}

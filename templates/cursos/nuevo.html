@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Asignar Curso a Catedrático</h4>
+        </div>
+        <div class="card-body">
+            <form method="POST">
+
+                <div class="mb-3">
+                    <label class="form-label">Catedrático</label>
+                    <select name="id_catedratico" class="form-select" required>
+                        <option value="">Seleccione un catedrático</option>
+                        {% for c in catedraticos %}
+                        <option value="{{ c[0] }}" {{ 'selected' if form_data is defined and form_data.get('id_catedratico') == c[0]|string else '' }}>{{ c[1] }} {{ c[2] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Sede</label>
+                    <select name="id_sede" class="form-select" required>
+                        <option value="">Seleccione una sede</option>
+                        {% for sede in sede_options %}
+                        <option value="{{ sede.id_sede }}" {{ 'selected' if form_data is defined and form_data.get('id_sede') == sede.id_sede|string else '' }}>{{ sede.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Carrera</label>
+                    <select name="carrera" class="form-select" required>
+                        <option value="">Seleccione una carrera</option>
+                        {% for car in carrera_options %}
+                        <option value="{{ car }}" {{ 'selected' if form_data is defined and form_data.get('carrera') == car else '' }}>{{ car }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Sección</label>
+                    <select name="seccion" class="form-select" required data-selected="{{ form_data.get('seccion','') if form_data is defined else '' }}">
+                        <option value="">Seleccione una sección</option>
+                        {% for sec in seccion_options %}
+                        <option value="{{ sec }}" {{ 'selected' if form_data is defined and form_data.get('seccion') == sec else '' }}>{{ sec }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Curso</label>
+                    <select name="id_curso" class="form-select" required data-selected="{{ form_data.get('id_curso','') if form_data is defined else '' }}">
+                        <option value="">Seleccione un curso</option>
+                        {% for curso in curso_options %}
+                        <option value="{{ curso[0] }}" {{ 'selected' if form_data is defined and form_data.get('id_curso') == curso[0]|string else '' }}>{{ curso[1] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-success">Asignar curso</button>
+                <a href="{{ url_for('listar_cursos') }}" class="btn btn-secondary">Cancelar</a>
+
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
