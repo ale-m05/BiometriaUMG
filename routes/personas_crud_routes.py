@@ -4,7 +4,7 @@ from flask import render_template, request, redirect, url_for, session, flash, j
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import date
 import models
-from helpers import obtener_usuario_sesion, get_carrera_options, get_sede_options
+from helpers import obtener_usuario_sesion, get_carrera_options, get_sede_options, get_carreras_for_sede, get_carrera_id, get_jornadas_options, is_valid_carrera_in_sede
 
 
 def register_personas_crud_routes(app):
@@ -339,13 +339,21 @@ def register_personas_crud_routes(app):
                 nombre = request.form.get('nombre', '').strip()
                 capacidad = request.form.get('capacidad', 40)
                 id_sede = request.form.get('id_sede')
+                carrera = request.form.get('carrera')
+                id_jornada = request.form.get('id_jornada')
                 
-                if not nombre or not id_sede:
-                    flash('Nombre y sede son obligatorios', 'warning')
+                if not nombre or not id_sede or not carrera or not id_jornada:
+                    flash('Nombre, sede, carrera y jornada son obligatorios', 'warning')
                     return redirect(url_for('salon_create'))
                 
+                if not is_valid_carrera_in_sede(id_sede, carrera):
+                    flash('La carrera seleccionada no es válida para la sede indicada', 'warning')
+                    return redirect(url_for('salon_create'))
+
                 capacidad = int(capacidad) if capacidad else 40
-                models.create_salon(nombre, capacidad, id_sede)
+                id_carrera = get_carrera_id(carrera)
+                id_jornada = int(id_jornada) if id_jornada else None
+                models.create_salon(nombre, capacidad, id_sede, id_carrera, id_jornada)
                 flash('Salón creado exitosamente', 'success')
                 return redirect(url_for('salones_list'))
             except Exception as e:
@@ -356,5 +364,7 @@ def register_personas_crud_routes(app):
         return render_template(
             'admin/salon_create.html',
             usuario=usuario,
-            sedes=models.get_all_sedes()
+            sedes=models.get_all_sedes(),
+            carreras=[],
+            jornadas=get_jornadas_options()
         )

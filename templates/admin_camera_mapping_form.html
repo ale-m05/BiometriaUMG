@@ -30,31 +30,20 @@
 </select>
 </div>
 <div class="mb-3">
-<label class="form-label">Sección</label>
-<select name="seccion" id="seccion" class="form-select" required>
-<option value="">-- Seleccione sección --</option>
-{% for sec in secciones %}
-<option value="{{ sec }}" {% if selected_seccion == sec %}selected{% endif %}>{{ sec }}</option>
-{% endfor %}
-</select>
-</div>
+<!-- Sección eliminada: usamos los salones filtrados por sede+carrera -->
 <div class="mb-3">
 <label class="form-label">Salón</label>
-<select name="id_salon" class="form-select" required>
+<select name="id_salon" id="id_salon" class="form-select" required>
 <option value="">-- Seleccione salón --</option>
 {% for s in salones %}
-<option value="{{ s.id_salon }}" {% if request.form.get('id_salon') == s.id_salon|string %}selected{% endif %}>{{ s.nombre }}</option>
+<option value="{{ s.id_salon }}" data-id-jornada="{{ s.id_jornada if s.id_jornada is defined else '' }}" {% if request.form.get('id_salon') == s.id_salon|string %}selected{% endif %}>{{ s.nombre }}</option>
 {% endfor %}
 </select>
 </div>
 <div class="mb-3">
 <label class="form-label">Jornada</label>
-<select name="id_jornada" class="form-select" required>
-<option value="">-- Seleccione jornada --</option>
-{% for j in jornadas %}
-<option value="{{ j.id_jornada }}" {% if request.form.get('id_jornada') == j.id_jornada|string %}selected{% endif %}>{{ j.nombre or j.id_jornada }}</option>
-{% endfor %}
-</select>
+<div id="id_jornada_display" class="form-control" style="background:#fff">{% if request.form.get('id_jornada') %}{{ request.form.get('id_jornada') }}{% else %}-- Automática desde salón --{% endif %}</div>
+<input type="hidden" name="id_jornada" id="id_jornada" value="{{ request.form.get('id_jornada','') }}">
 </div>
 <div class="form-check mb-3">
 <input class="form-check-input" type="checkbox" value="1" name="activo" id="activo" checked>
@@ -66,9 +55,7 @@
 async function fetchCarreras() {
     const sede = document.getElementById('id_sede').value;
     const carreraSelect = document.getElementById('carrera');
-    const seccionSelect = document.getElementById('seccion');
     carreraSelect.innerHTML = '<option value="">-- Seleccione carrera --</option>';
-    seccionSelect.innerHTML = '<option value="">-- Seleccione sección --</option>';
     if (!sede) return;
     const res = await fetch(`/admin/api/carreras_por_sede?id_sede=${encodeURIComponent(sede)}`);
     const data = await res.json();
@@ -79,22 +66,36 @@ async function fetchCarreras() {
         carreraSelect.appendChild(option);
     }
 }
-async function fetchSecciones() {
+async function fetchSalones() {
     const sede = document.getElementById('id_sede').value;
     const carrera = document.getElementById('carrera').value;
-    const seccionSelect = document.getElementById('seccion');
-    seccionSelect.innerHTML = '<option value="">-- Seleccione sección --</option>';
+    const salonSelect = document.getElementById('id_salon');
+    salonSelect.innerHTML = '<option value="">-- Seleccione salón --</option>';
     if (!sede || !carrera) return;
-    const res = await fetch(`/admin/api/secciones_por_sede_carrera?id_sede=${encodeURIComponent(sede)}&carrera=${encodeURIComponent(carrera)}`);
+    const res = await fetch(`/admin/api/salones_por_sede_carrera?id_sede=${encodeURIComponent(sede)}&carrera=${encodeURIComponent(carrera)}`);
     const data = await res.json();
-    for (const seccion of data.secciones) {
+    for (const s of data.salones) {
         const option = document.createElement('option');
-        option.value = seccion;
-        option.textContent = seccion;
-        seccionSelect.appendChild(option);
+        option.value = s.id_salon;
+        option.textContent = s.nombre + (s.jornada_nombre ? (' - ' + s.jornada_nombre) : '');
+        option.dataset.idJornada = s.id_jornada || '';
+        option.dataset.jornadaNombre = s.jornada_nombre || '';
+        salonSelect.appendChild(option);
     }
 }
+
 document.getElementById('id_sede').addEventListener('change', fetchCarreras);
-document.getElementById('carrera').addEventListener('change', fetchSecciones);
+document.getElementById('carrera').addEventListener('change', fetchSalones);
+
+// Cuando se escoge un salón, auto-seleccionar la jornada asociada si existe
+document.getElementById('id_salon').addEventListener('change', function() {
+    const sel = this.options[this.selectedIndex];
+    const idJ = sel ? sel.dataset.idJornada : '';
+    const jNombre = sel ? sel.dataset.jornadaNombre : '';
+    const jornadaHidden = document.getElementById('id_jornada');
+    const jornadaDisplay = document.getElementById('id_jornada_display');
+    jornadaHidden.value = idJ || '';
+    jornadaDisplay.textContent = jNombre ? jNombre : '-- Automática desde salón --';
+});
 </script>
 {% endblock %}

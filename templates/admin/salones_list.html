@@ -16,6 +16,8 @@
                     <tr>
                         <th>Nombre</th>
                         <th>Sede</th>
+                        <th>Carrera</th>
+                        <th>Jornada</th>
                         <th>Capacidad</th>
                         <th>Estado</th>
                         <th>Acciones</th>
@@ -27,6 +29,8 @@
                         <tr>
                             <td><strong>{{ s.nombre }}</strong></td>
                             <td>{{ s.sede_nombre or '-' }}</td>
+                            <td>{{ s.carrera_nombre or '-' }}</td>
+                            <td>{{ s.jornada_nombre or '-' }}</td>
                             <td><span class="badge bg-info">{{ s.capacidad or 40 }} personas</span></td>
                             <td><span class="badge bg-success">Disponible</span></td>
                             <td>
@@ -38,7 +42,7 @@
                         {% endfor %}
                     {% else %}
                         <tr>
-                            <td colspan="5" class="text-center text-muted py-4">
+                            <td colspan="7" class="text-center text-muted py-4">
                                 <i class="bi bi-inbox"></i> No hay salones registrados
                             </td>
                         </tr>

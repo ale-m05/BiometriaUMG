@@ -13,7 +13,9 @@ from helpers import (
     get_seccion_id,
     get_carrera_id,
     get_sede_options,
-    get_rol_id_by_name
+    get_jornadas_options,
+    get_rol_id_by_name,
+    is_valid_carrera_in_sede
 )
 import models
 
@@ -415,7 +417,14 @@ def register_admin_routes(app):
         if session.get('rol') != 'administrativo':
             return redirect(url_for('login'))
         conn = get_db_connection(); cursor = conn.cursor(dictionary=True)
-        cursor.execute('SELECT id_salon, nombre, codigo, ubicacion, descripcion, id_sede FROM salones ORDER BY nombre')
+        cursor.execute('''
+            SELECT s.*, se.nombre AS sede_nombre, ca.nombre AS carrera_nombre, j.nombre AS jornada_nombre
+            FROM salones s
+            JOIN sedes se ON s.id_sede = se.id_sede
+            LEFT JOIN carreras ca ON s.id_carrera = ca.id_carrera
+            LEFT JOIN jornadas j ON s.id_jornada = j.id_jornada
+            ORDER BY s.nombre
+        ''')
         salones = cursor.fetchall()
         cursor.close(); conn.close()
         return render_template('admin_salones.html', salones=salones)
@@ -431,15 +440,24 @@ def register_admin_routes(app):
             ubicacion = request.form.get('ubicacion')
             descripcion = request.form.get('descripcion')
             id_sede = request.form.get('id_sede') or None
-            if not nombre:
-                flash('El nombre es obligatorio.', 'warning'); return redirect(url_for('admin_salones_nuevo'))
+            carrera = request.form.get('carrera') or None
+            id_jornada = request.form.get('id_jornada') or None
+            
+            if not nombre or not id_sede or not carrera or not id_jornada:
+                flash('Nombre, sede, carrera y jornada son obligatorios.', 'warning'); return redirect(url_for('admin_salones_nuevo'))
+            
+            id_carrera = get_carrera_id(carrera)
+            if not id_carrera or not is_valid_carrera_in_sede(id_sede, carrera):
+                flash('La carrera seleccionada no es válida para la sede indicada.', 'warning'); return redirect(url_for('admin_salones_nuevo'))
+            
             try:
-                cursor.execute('INSERT INTO salones (nombre, codigo, ubicacion, descripcion, id_sede) VALUES (%s,%s,%s,%s,%s)', (nombre, codigo, ubicacion, descripcion, id_sede))
+                id_jornada = int(id_jornada) if id_jornada else None
+                cursor.execute('INSERT INTO salones (nombre, codigo, id_sede, id_carrera, id_jornada, ubicacion, descripcion) VALUES (%s,%s,%s,%s,%s,%s,%s)', (nombre, codigo, id_sede, id_carrera, id_jornada, ubicacion, descripcion))
                 conn.commit(); flash('Salón creado.', 'success'); return redirect(url_for('admin_salones'))
             except Exception as e:
                 conn.rollback(); flash(f'Error: {e}', 'danger')
         cursor.close(); conn.close()
-        return render_template('admin_salon_form.html')
+        return render_template('admin_salon_form.html', sedes=get_sede_options(), carreras=[], jornadas=get_jornadas_options())
 
     @app.route('/admin/salones/<int:id_salon>/editar', methods=['GET', 'POST'])
     def admin_salones_editar(id_salon):
@@ -452,17 +470,28 @@ def register_admin_routes(app):
             ubicacion = request.form.get('ubicacion')
             descripcion = request.form.get('descripcion')
             id_sede = request.form.get('id_sede') or None
+            carrera = request.form.get('carrera') or None
+            id_jornada = request.form.get('id_jornada') or None
+            
+            if not nombre or not id_sede or not carrera or not id_jornada:
+                flash('Nombre, sede, carrera y jornada son obligatorios.', 'warning'); return redirect(url_for('admin_salones_editar', id_salon=id_salon))
+            
+            id_carrera = get_carrera_id(carrera)
+            if not id_carrera or not is_valid_carrera_in_sede(id_sede, carrera):
+                flash('La carrera seleccionada no es válida para la sede indicada.', 'warning'); return redirect(url_for('admin_salones_editar', id_salon=id_salon))
+            
             try:
-                cursor.execute('UPDATE salones SET nombre=%s, codigo=%s, ubicacion=%s, descripcion=%s, id_sede=%s WHERE id_salon=%s', (nombre, codigo, ubicacion, descripcion, id_sede, id_salon))
+                id_jornada = int(id_jornada) if id_jornada else None
+                cursor.execute('UPDATE salones SET nombre=%s, codigo=%s, ubicacion=%s, descripcion=%s, id_sede=%s, id_carrera=%s, id_jornada=%s WHERE id_salon=%s', (nombre, codigo, ubicacion, descripcion, id_sede, id_carrera, id_jornada, id_salon))
                 conn.commit(); flash('Salón actualizado.', 'success'); return redirect(url_for('admin_salones'))
             except Exception as e:
                 conn.rollback(); flash(f'Error: {e}', 'danger')
-        cursor.execute('SELECT id_salon, nombre, codigo, ubicacion, descripcion, id_sede FROM salones WHERE id_salon=%s', (id_salon,))
+        cursor.execute('SELECT s.id_salon, s.nombre, s.codigo, s.ubicacion, s.descripcion, s.id_sede, s.id_carrera, s.id_jornada, ca.nombre as carrera_nombre, j.nombre as jornada_nombre FROM salones s LEFT JOIN carreras ca ON s.id_carrera = ca.id_carrera LEFT JOIN jornadas j ON s.id_jornada = j.id_jornada WHERE s.id_salon=%s', (id_salon,))
         salon = cursor.fetchone()
         cursor.close(); conn.close()
         if not salon:
             flash('Salón no encontrado.', 'warning'); return redirect(url_for('admin_salones'))
-        return render_template('admin_salon_form.html', salon=salon)
+        return render_template('admin_salon_form.html', salon=salon, sedes=get_sede_options(), carreras=get_carreras_for_sede(salon['id_sede']) if salon['id_sede'] else [], jornadas=get_jornadas_options())
 
     @app.route('/admin/salones/<int:id_salon>/eliminar', methods=['POST'])
     def admin_salones_eliminar(id_salon):
@@ -513,40 +542,40 @@ def register_admin_routes(app):
         conn = get_db_connection(); cursor = conn.cursor(dictionary=True)
         selected_sede = None
         selected_carrera = None
-        selected_seccion = None
         carreras = []
-        secciones = []
         if request.method == 'POST':
             cam_id = request.form.get('cam_id')
             selected_sede = request.form.get('id_sede') or None
             selected_carrera = request.form.get('carrera') or None
-            selected_seccion = request.form.get('seccion') or None
             id_salon = request.form.get('id_salon') or None
-            id_jornada = request.form.get('id_jornada') or None
+            # id_jornada will be derived from the selected salon to prevent manual override
+            id_jornada = None
             activo = 1 if request.form.get('activo') == '1' else 0
             if selected_sede:
                 carreras = get_carreras_for_sede(selected_sede)
             if selected_sede and selected_carrera:
-                secciones = get_seccion_options(selected_sede, selected_carrera)
+                # keep carreras list populated for re-render
+                pass
             id_sede_carrera = get_sede_carrera_id(selected_sede, selected_carrera) if selected_sede and selected_carrera else None
             id_seccion = None
-            if selected_seccion and selected_carrera:
-                id_carrera = get_carrera_id(selected_carrera)
-                id_seccion = get_seccion_id(selected_seccion, id_carrera) if id_carrera else None
+            # derive jornada from salon if salon selected
+            if id_salon:
+                try:
+                    cursor.execute('SELECT id_jornada FROM salones WHERE id_salon=%s', (id_salon,))
+                    row = cursor.fetchone()
+                    id_jornada = row['id_jornada'] if row and 'id_jornada' in row else None
+                except Exception:
+                    id_jornada = None
             if not selected_sede:
                 flash('Debe seleccionar una sede.', 'warning')
             elif not selected_carrera:
                 flash('Debe seleccionar una carrera.', 'warning')
-            elif not selected_seccion:
-                flash('Debe seleccionar una sección.', 'warning')
             elif not id_sede_carrera:
                 flash('La combinación de sede y carrera no es válida.', 'warning')
-            elif selected_seccion and id_seccion is None:
-                flash('La sección seleccionada no es válida para la carrera y sede.', 'warning')
             elif not id_salon:
                 flash('Debe seleccionar un salón.', 'warning')
             elif not id_jornada:
-                flash('Debe seleccionar una jornada.', 'warning')
+                flash('El salón seleccionado no tiene jornada asignada.', 'warning')
             elif not cam_id:
                 flash('Debe seleccionar una cámara.', 'warning')
             else:
@@ -559,22 +588,22 @@ def register_admin_routes(app):
                     conn.rollback(); flash(f'Error: {e}', 'danger')
         cursor.execute('SELECT cam_id, nombre FROM camaras ORDER BY cam_id')
         cams = cursor.fetchall()
-        cursor.execute('SELECT id_salon, nombre FROM salones ORDER BY nombre')
+        cursor.execute('''
+            SELECT s.id_salon, s.nombre, s.id_jornada, j.nombre AS jornada_nombre
+            FROM salones s
+            LEFT JOIN jornadas j ON s.id_jornada = j.id_jornada
+            ORDER BY s.nombre
+        ''')
         salones = cursor.fetchall()
-        cursor.execute('SELECT id_jornada, nombre FROM jornadas ORDER BY id_jornada')
-        jornadas = cursor.fetchall()
         cursor.close(); conn.close()
         return render_template(
             'admin_camera_mapping_form.html',
             cams=cams,
             salones=salones,
-            jornadas=jornadas,
             sedes=get_sede_options(),
             carreras=carreras,
-            secciones=secciones,
             selected_sede=selected_sede,
-            selected_carrera=selected_carrera,
-            selected_seccion=selected_seccion
+            selected_carrera=selected_carrera
         )
 
     @app.route('/admin/api/carreras_por_sede')
@@ -595,6 +624,26 @@ def register_admin_routes(app):
         carrera = request.args.get('carrera')
         secciones = get_seccion_options(id_sede, carrera) if id_sede and carrera else []
         return jsonify({'secciones': secciones})
+
+    @app.route('/admin/api/salones_por_sede_carrera')
+    def api_salones_por_sede_carrera():
+        id_sede = request.args.get('id_sede')
+        carrera = request.args.get('carrera')
+        conn = get_db_connection(); cursor = conn.cursor(dictionary=True)
+        salones = []
+        if id_sede and carrera:
+            id_carrera = get_carrera_id(carrera)
+            if id_carrera:
+                cursor.execute('''
+                    SELECT s.id_salon, s.nombre, s.id_jornada, j.nombre AS jornada_nombre
+                    FROM salones s
+                    LEFT JOIN jornadas j ON s.id_jornada = j.id_jornada
+                    WHERE s.id_sede=%s AND s.id_carrera=%s
+                    ORDER BY s.nombre
+                ''', (id_sede, id_carrera))
+                salones = [{'id_salon': s['id_salon'], 'nombre': s['nombre'], 'id_jornada': s.get('id_jornada'), 'jornada_nombre': s.get('jornada_nombre')} for s in cursor.fetchall()]
+        cursor.close(); conn.close()
+        return jsonify({'salones': salones})
 
     @app.route('/admin/camera_mappings/<int:id>/eliminar', methods=['POST'])
     def admin_camera_mappings_eliminar(id):

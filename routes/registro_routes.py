@@ -71,11 +71,11 @@ def register_registro_routes(app):
             if not is_valid_carrera(carrera):
                 flash('Carrera inválida. Seleccione una opción válida.', 'danger')
                 form_data['fotografia'] = imagen_base64 or ''
-                return render_template('registrar.html', form_data=form_data, retake_photo=True, usuario=usuario, carrera_options=[], seccion_options=seccion_options, sede_options=sede_options)
+                return render_template('registrar.html', form_data=form_data, retake_photo=True, usuario=usuario, carrera_options=[], seccion_options=seccion_options, sede_options=sede_options, jornadas_options=jornadas_options)
             if not is_valid_seccion(seccion, carrera):
                 flash('Sección inválida. Seleccione una opción válida.', 'danger')
                 form_data['fotografia'] = imagen_base64 or ''
-                return render_template('registrar.html', form_data=form_data, retake_photo=True, usuario=usuario, carrera_options=[], seccion_options=seccion_options, sede_options=sede_options)
+                return render_template('registrar.html', form_data=form_data, retake_photo=True, usuario=usuario, carrera_options=[], seccion_options=seccion_options, sede_options=sede_options, jornadas_options=jornadas_options)
             sede = request.form.get('sede')
             if not is_valid_sede(sede):
                 flash('Sede inválida. Seleccione una opción válida.', 'danger')
@@ -87,14 +87,14 @@ def register_registro_routes(app):
             if not imagen_base64:
                 flash('Debe capturar la fotografía', 'danger')
                 form_data['fotografia'] = ''
-                return render_template('registrar.html', form_data=form_data, retake_photo=True, usuario=usuario, carrera_options=[], seccion_options=get_seccion_options(carrera), sede_options=sede_options)
+                return render_template('registrar.html', form_data=form_data, retake_photo=True, usuario=usuario, carrera_options=[], seccion_options=get_seccion_options(carrera), sede_options=sede_options, jornadas_options=jornadas_options)
             try:
                 _, encoded = imagen_base64.split(',', 1)
                 imagen_bytes = base64.b64decode(encoded)
             except Exception:
                 flash('Error procesando la imagen. Vuelva a tomar la fotografía.', 'danger')
                 form_data['fotografia'] = ''
-                return render_template('registrar.html', form_data=form_data, retake_photo=True, usuario=usuario, carrera_options=[], seccion_options=get_seccion_options(carrera))
+                return render_template('registrar.html', form_data=form_data, retake_photo=True, usuario=usuario, carrera_options=[], seccion_options=get_seccion_options(carrera), jornadas_options=jornadas_options)
 
             conn = get_db_connection()
             cursor = conn.cursor(dictionary=True)

@@ -383,17 +383,21 @@ def get_all_salones(id_sede=None):
     
     if id_sede:
         cursor.execute("""
-            SELECT s.*, se.nombre as sede_nombre
+            SELECT s.*, se.nombre as sede_nombre, ca.nombre as carrera_nombre, j.nombre as jornada_nombre
             FROM salones s
             JOIN sedes se ON s.id_sede = se.id_sede
+            LEFT JOIN carreras ca ON s.id_carrera = ca.id_carrera
+            LEFT JOIN jornadas j ON s.id_jornada = j.id_jornada
             WHERE s.id_sede = %s
             ORDER BY s.nombre
         """, (id_sede,))
     else:
         cursor.execute("""
-            SELECT s.*, se.nombre as sede_nombre
+            SELECT s.*, se.nombre as sede_nombre, ca.nombre as carrera_nombre, j.nombre as jornada_nombre
             FROM salones s
             JOIN sedes se ON s.id_sede = se.id_sede
+            LEFT JOIN carreras ca ON s.id_carrera = ca.id_carrera
+            LEFT JOIN jornadas j ON s.id_jornada = j.id_jornada
             ORDER BY s.nombre
         """)
     
@@ -403,15 +407,15 @@ def get_all_salones(id_sede=None):
     return salones
 
 
-def create_salon(nombre, capacidad, id_sede):
+def create_salon(nombre, capacidad, id_sede, id_carrera=None, id_jornada=None):
     """Crea un nuevo salón"""
     conn = get_db_connection()
     cursor = conn.cursor()
     
     cursor.execute("""
-        INSERT INTO salones (nombre, capacidad, id_sede)
-        VALUES (%s, %s, %s)
-    """, (nombre, capacidad, id_sede))
+        INSERT INTO salones (nombre, capacidad, id_sede, id_carrera, id_jornada)
+        VALUES (%s, %s, %s, %s, %s)
+    """, (nombre, capacidad, id_sede, id_carrera, id_jornada))
     
     id_salon = cursor.lastrowid
     conn.commit()

@@ -555,12 +555,18 @@ CREATE TABLE `salones` (
   `nombre` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
   `capacidad` int DEFAULT '40',
   `id_sede` int NOT NULL,
+  `id_carrera` int DEFAULT NULL,
+  `id_jornada` int DEFAULT NULL,
   `codigo` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `ubicacion` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `descripcion` text COLLATE utf8mb4_unicode_ci,
   PRIMARY KEY (`id_salon`),
   KEY `id_sede` (`id_sede`),
-  CONSTRAINT `salones_ibfk_1` FOREIGN KEY (`id_sede`) REFERENCES `sedes` (`id_sede`) ON DELETE CASCADE
+  KEY `id_carrera` (`id_carrera`),
+  KEY `id_jornada` (`id_jornada`),
+  CONSTRAINT `salones_ibfk_1` FOREIGN KEY (`id_sede`) REFERENCES `sedes` (`id_sede`) ON DELETE CASCADE,
+  CONSTRAINT `salones_ibfk_2` FOREIGN KEY (`id_carrera`) REFERENCES `carreras` (`id_carrera`),
+  CONSTRAINT `salones_ibfk_3` FOREIGN KEY (`id_jornada`) REFERENCES `jornadas` (`id_jornada`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -570,7 +576,7 @@ CREATE TABLE `salones` (
 
 LOCK TABLES `salones` WRITE;
 /*!40000 ALTER TABLE `salones` DISABLE KEYS */;
-INSERT INTO `salones` VALUES (1,'Salon 306',40,1,'306','Edificio A',NULL);
+INSERT INTO `salones` VALUES (1,'Salon 306',40,1,NULL,'306','Edificio A',NULL);
 /*!40000 ALTER TABLE `salones` ENABLE KEYS */;
 UNLOCK TABLES;
 

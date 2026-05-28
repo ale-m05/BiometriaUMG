@@ -110,6 +110,16 @@
                         </select>
                     </div>
 
+                    <div class="mb-3">
+                        <label>Jornada</label>
+                        <select name="id_jornada" class="form-select">
+                            <option value="">Seleccione...</option>
+                            {% for j in jornadas_options %}
+                                <option value="{{ j.id_jornada }}" {{ 'selected' if form_data is defined and form_data.id_jornada == j.id_jornada|string else '' }}>{{ j.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
                 </div>
 
                 <!-- CAMARA -->
@@ -194,7 +204,7 @@
 ========================= */
 const video = document.getElementById("video");
 const ipcam = document.getElementById("ipcam");
-const IPCAM_URL = "http://10.159.145.106:4747/video"; // Cambia esta IP según tu red
+const IPCAM_URL = "http://192.168.1.229:4747/video"; // Cambia esta IP según tu red
 
 let currentStream = null;
 

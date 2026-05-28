@@ -23,10 +23,26 @@
 
                         <div class="mb-4">
                             <label class="form-label">Sede *</label>
-                            <select name="id_sede" class="form-select" required>
+                            <select id="id_sede" name="id_sede" class="form-select" required>
                                 <option value="">-- Seleccionar --</option>
                                 {% for sede in sedes %}
                                 <option value="{{ sede.id_sede }}">{{ sede.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label">Carrera *</label>
+                            <select id="carrera" name="carrera" class="form-select" required>
+                                <option value="">-- Seleccionar una sede primero --</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Jornada *</label>
+                            <select id="id_jornada" name="id_jornada" class="form-select" required>
+                                <option value="">-- Seleccionar --</option>
+                                {% for jornada in jornadas %}
+                                <option value="{{ jornada.id_jornada }}">{{ jornada.nombre }}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -45,5 +61,41 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const sedeSelect = document.getElementById('id_sede');
+    const carreraSelect = document.getElementById('carrera');
+
+    sedeSelect.addEventListener('change', function () {
+        const sedeId = sedeSelect.value;
+        carreraSelect.innerHTML = '<option value="">Cargando carreras...</option>';
+
+        if (!sedeId) {
+            carreraSelect.innerHTML = '<option value="">-- Seleccionar una sede primero --</option>';
+            return;
+        }
+
+        fetch(`/admin/api/carreras_por_sede?id_sede=${encodeURIComponent(sedeId)}`)
+            .then(response => response.json())
+            .then(data => {
+                carreraSelect.innerHTML = '<option value="">-- Seleccionar --</option>'; 
+                if (Array.isArray(data.carreras) && data.carreras.length > 0) {
+                    data.carreras.forEach(carrera => {
+                        const option = document.createElement('option');
+                        option.value = carrera;
+                        option.textContent = carrera;
+                        carreraSelect.appendChild(option);
+                    });
+                } else {
+                    carreraSelect.innerHTML = '<option value="">No hay carreras para esta sede</option>';
+                }
+            })
+            .catch(() => {
+                carreraSelect.innerHTML = '<option value="">Error cargando carreras</option>';
+            });
+    });
+});
+</script>
 
 {% endblock %}
