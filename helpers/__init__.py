@@ -12,6 +12,7 @@ from .campus_helpers import (
     get_sede_options,
     is_valid_sede,
     get_jornadas_options,
+    get_jornadas_for_sede_carrera,
 )
 from .user_helpers import (
     limpiar_nombre,
@@ -37,6 +38,7 @@ __all__ = [
     'get_sede_options',
     'is_valid_sede',
     'get_jornadas_options',
+    'get_jornadas_for_sede_carrera',
     'get_roles_persona_schema',
     'get_active_role_clause',
     'get_role_name',

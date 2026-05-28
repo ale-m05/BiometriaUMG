@@ -6,7 +6,7 @@ from datetime import date, datetime
 
 import cv2
 import face_recognition
-from flask import render_template, request, redirect, url_for, session, flash
+from flask import render_template, request, redirect, url_for, session, flash, jsonify
 
 from database import get_db_connection
 from helpers import (
@@ -24,6 +24,7 @@ from helpers import (
     get_roles_persona_schema,
     get_rol_id_by_name,
     get_jornadas_options,
+    get_jornadas_for_sede_carrera,
 )
 from pdf_utils import generate_id_card_pdf, send_email_with_pdf
 
@@ -66,7 +67,8 @@ def register_registro_routes(app):
             form_data = request.form.to_dict(flat=True)
             seccion_options = get_seccion_options(carrera) if carrera else []
             sede_options = get_sede_options()
-            jornadas_options = get_jornadas_options()
+            sede_val = request.form.get('sede')
+            jornadas_options = get_jornadas_for_sede_carrera(sede_val, carrera) if sede_val and carrera else get_jornadas_options()
 
             if not is_valid_carrera(carrera):
                 flash('Carrera inválida. Seleccione una opción válida.', 'danger')
@@ -190,7 +192,7 @@ def register_registro_routes(app):
                     carrera_options=[],
                     seccion_options=get_seccion_options(carrera),
                     sede_options=get_sede_options(),
-                    jornadas_options=get_jornadas_options()
+                    jornadas_options=jornadas_options
                 )
 
             try:
@@ -213,3 +215,10 @@ def register_registro_routes(app):
         sede_options = get_sede_options()
         jornadas_options = get_jornadas_options()
         return render_template('registrar.html', usuario=usuario, carrera_options=[], seccion_options=[], sede_options=sede_options, jornadas_options=jornadas_options)
+
+        @app.route('/api/jornadas_por_sede_carrera')
+        def api_jornadas_por_sede_carrera():
+            id_sede = request.args.get('id_sede')
+            carrera = request.args.get('carrera')
+            jornadas = get_jornadas_for_sede_carrera(id_sede, carrera) if id_sede and carrera else []
+            return jsonify({'jornadas': jornadas})

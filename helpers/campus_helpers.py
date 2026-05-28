@@ -174,3 +174,38 @@ def get_jornadas_options():
     cursor.close()
     conn.close()
     return rows or []
+
+
+def get_jornadas_for_sede_carrera(id_sede, carrera):
+    """Obtiene las jornadas disponibles para una combinación sede + carrera."""
+    try:
+        id_sede = int(id_sede)
+    except Exception:
+        return []
+
+    id_carrera = get_carrera_id(carrera)
+    if not id_carrera:
+        return []
+    # La tabla en el dump es `sedes_carreras_jornadas` con columnas
+    # (id_sede_carrera_jornada, id_sede_carrera, id_jornada)
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute(
+            """
+            SELECT j.id_jornada, j.nombre
+            FROM sedes_carreras_jornadas scj
+            INNER JOIN sede_carrera sc ON scj.id_sede_carrera = sc.id_sede_carrera
+            INNER JOIN jornadas j ON scj.id_jornada = j.id_jornada
+            WHERE sc.id_sede = %s AND sc.id_carrera = %s
+            ORDER BY j.nombre
+            """,
+            (id_sede, id_carrera)
+        )
+        rows = cursor.fetchall()
+        return rows or []
+    except Exception:
+        return []
+    finally:
+        cursor.close()
+        conn.close()

@@ -399,6 +399,49 @@ document.addEventListener("DOMContentLoaded", function(){
 });
 {% endif %}
 
+/* =========================
+   CARGAR JORNADAS DINÁMICAMENTE
+========================= */
+async function actualizarJornadas() {
+    const sedeSelect = document.querySelector('select[name="sede"]');
+    const carreraSelect = document.querySelector('select[name="carrera"]');
+    const jornadaSelect = document.querySelector('select[name="id_jornada"]');
+    if (!sedeSelect || !carreraSelect || !jornadaSelect) return;
+
+    const id_sede = sedeSelect.value;
+    const carrera = carreraSelect.value;
+
+    // limpiar
+    jornadaSelect.innerHTML = '<option value="">Seleccione...</option>';
+
+    if (!id_sede || !carrera) return;
+
+    try {
+        const resp = await fetch(`/api/jornadas_por_sede_carrera?id_sede=${encodeURIComponent(id_sede)}&carrera=${encodeURIComponent(carrera)}`);
+        if (!resp.ok) return;
+        const data = await resp.json();
+        const selectedJ = '{{ form_data.id_jornada if form_data is defined else "" }}';
+        data.jornadas.forEach(j => {
+            const opt = document.createElement('option');
+            opt.value = j.id_jornada;
+            opt.textContent = j.nombre;
+            if (selectedJ && selectedJ === String(j.id_jornada)) opt.selected = true;
+            jornadaSelect.appendChild(opt);
+        });
+    } catch (e) {
+        console.error('Error cargando jornadas:', e);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const sedeSelect = document.querySelector('select[name="sede"]');
+    const carreraSelect = document.querySelector('select[name="carrera"]');
+    if (sedeSelect) sedeSelect.addEventListener('change', actualizarJornadas);
+    if (carreraSelect) carreraSelect.addEventListener('change', actualizarJornadas);
+    // cargar si ya hay valores seleccionados
+    actualizarJornadas();
+});
+
 </script>
 
 {% endblock %}

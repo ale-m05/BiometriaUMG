@@ -144,7 +144,7 @@ CREATE TABLE `camaras` (
 
 LOCK TABLES `camaras` WRITE;
 /*!40000 ALTER TABLE `camaras` DISABLE KEYS */;
-INSERT INTO `camaras` VALUES ('cam1','Puerta Principal','http://10.159.145.12:4747/video',1,'Camara puerta principal'),('cam2','Salon 306','http://192.168.1.72:4747/video',1,'IPCam salon 306');
+INSERT INTO `camaras` VALUES ('cam1','Puerta Principal','http://10.159.145.12:4747/video',1,'Camara puerta principal'),('cam2','Salon 306','http://192.168.1.72:4747/video',1,'IPCam salon 306'),('cam3','Salon 306','http://192.168.1.72:4747/video',1,'');
 /*!40000 ALTER TABLE `camaras` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -175,7 +175,7 @@ CREATE TABLE `camera_mappings` (
   CONSTRAINT `fk_cammap_salon` FOREIGN KEY (`id_salon`) REFERENCES `salones` (`id_salon`),
   CONSTRAINT `fk_cammap_seccion` FOREIGN KEY (`id_seccion`) REFERENCES `secciones` (`id_seccion`),
   CONSTRAINT `fk_cammap_sede_carrera` FOREIGN KEY (`id_sede_carrera`) REFERENCES `sede_carrera` (`id_sede_carrera`)
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -184,6 +184,7 @@ CREATE TABLE `camera_mappings` (
 
 LOCK TABLES `camera_mappings` WRITE;
 /*!40000 ALTER TABLE `camera_mappings` DISABLE KEYS */;
+INSERT INTO `camera_mappings` VALUES (13,'cam2',1,1,36,1,1),(15,'cam2',2,1,36,1,NULL);
 /*!40000 ALTER TABLE `camera_mappings` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -349,7 +350,7 @@ CREATE TABLE `jornadas` (
   `descripcion` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id_jornada`),
   UNIQUE KEY `nombre` (`nombre`)
-) ENGINE=InnoDB AUTO_INCREMENT=37 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=47 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -379,7 +380,7 @@ CREATE TABLE `jornadas_sedes` (
   KEY `id_sede` (`id_sede`),
   CONSTRAINT `fk_jornadasedes_jornada` FOREIGN KEY (`id_jornada`) REFERENCES `jornadas` (`id_jornada`),
   CONSTRAINT `fk_jornadasedes_sede` FOREIGN KEY (`id_sede`) REFERENCES `sedes` (`id_sede`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -388,6 +389,7 @@ CREATE TABLE `jornadas_sedes` (
 
 LOCK TABLES `jornadas_sedes` WRITE;
 /*!40000 ALTER TABLE `jornadas_sedes` DISABLE KEYS */;
+INSERT INTO `jornadas_sedes` VALUES (4,36,1);
 /*!40000 ALTER TABLE `jornadas_sedes` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -417,7 +419,7 @@ CREATE TABLE `personas` (
   UNIQUE KEY `carnet` (`carnet`),
   UNIQUE KEY `correo_institucional` (`correo_institucional`),
   KEY `idx_persona_correo` (`correo_institucional`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -530,7 +532,7 @@ CREATE TABLE `roles_persona` (
   CONSTRAINT `fk_rolespersona_jornada` FOREIGN KEY (`id_jornada`) REFERENCES `jornadas` (`id_jornada`),
   CONSTRAINT `roles_persona_ibfk_1` FOREIGN KEY (`id_persona`) REFERENCES `personas` (`id_persona`) ON DELETE CASCADE,
   CONSTRAINT `roles_persona_ibfk_2` FOREIGN KEY (`id_rol`) REFERENCES `roles` (`id_rol`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -555,19 +557,19 @@ CREATE TABLE `salones` (
   `nombre` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
   `capacidad` int DEFAULT '40',
   `id_sede` int NOT NULL,
-  `id_carrera` int DEFAULT NULL,
-  `id_jornada` int DEFAULT NULL,
   `codigo` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `ubicacion` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `descripcion` text COLLATE utf8mb4_unicode_ci,
+  `id_carrera` int DEFAULT NULL,
+  `id_jornada` int DEFAULT NULL,
   PRIMARY KEY (`id_salon`),
   KEY `id_sede` (`id_sede`),
   KEY `id_carrera` (`id_carrera`),
   KEY `id_jornada` (`id_jornada`),
-  CONSTRAINT `salones_ibfk_1` FOREIGN KEY (`id_sede`) REFERENCES `sedes` (`id_sede`) ON DELETE CASCADE,
-  CONSTRAINT `salones_ibfk_2` FOREIGN KEY (`id_carrera`) REFERENCES `carreras` (`id_carrera`),
-  CONSTRAINT `salones_ibfk_3` FOREIGN KEY (`id_jornada`) REFERENCES `jornadas` (`id_jornada`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  CONSTRAINT `fk_salones_carreras` FOREIGN KEY (`id_carrera`) REFERENCES `carreras` (`id_carrera`),
+  CONSTRAINT `fk_salones_jornadas` FOREIGN KEY (`id_jornada`) REFERENCES `jornadas` (`id_jornada`),
+  CONSTRAINT `salones_ibfk_1` FOREIGN KEY (`id_sede`) REFERENCES `sedes` (`id_sede`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -576,7 +578,7 @@ CREATE TABLE `salones` (
 
 LOCK TABLES `salones` WRITE;
 /*!40000 ALTER TABLE `salones` DISABLE KEYS */;
-INSERT INTO `salones` VALUES (1,'Salon 306',40,1,NULL,'306','Edificio A',NULL);
+INSERT INTO `salones` VALUES (1,'Salon 306',40,1,'305','Edificio A','None',1,4),(2,'Salon 306',40,1,'306','Edificio A','None',1,36),(3,'salon 305',40,1,'305','Edificio A','',1,36);
 /*!40000 ALTER TABLE `salones` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -662,6 +664,35 @@ INSERT INTO `sedes` VALUES (1,'UMG Boca del Monte',NULL,NULL),(2,'UMG Villa Nuev
 UNLOCK TABLES;
 
 --
+-- Table structure for table `sedes_carreras_jornadas`
+--
+
+DROP TABLE IF EXISTS `sedes_carreras_jornadas`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `sedes_carreras_jornadas` (
+  `id_sede_carrera_jornada` int NOT NULL AUTO_INCREMENT,
+  `id_sede_carrera` int NOT NULL,
+  `id_jornada` int NOT NULL,
+  PRIMARY KEY (`id_sede_carrera_jornada`),
+  KEY `fk_scj_sede_carrera` (`id_sede_carrera`),
+  KEY `fk_scj_jornada` (`id_jornada`),
+  CONSTRAINT `fk_scj_jornada` FOREIGN KEY (`id_jornada`) REFERENCES `jornadas` (`id_jornada`),
+  CONSTRAINT `fk_scj_sede_carrera` FOREIGN KEY (`id_sede_carrera`) REFERENCES `sede_carrera` (`id_sede_carrera`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `sedes_carreras_jornadas`
+--
+
+LOCK TABLES `sedes_carreras_jornadas` WRITE;
+/*!40000 ALTER TABLE `sedes_carreras_jornadas` DISABLE KEYS */;
+INSERT INTO `sedes_carreras_jornadas` VALUES (1,1,36);
+/*!40000 ALTER TABLE `sedes_carreras_jornadas` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `usuarios`
 --
 
@@ -700,4 +731,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-05-27  7:58:49
+-- Dump completed on 2026-05-27 22:27:01
