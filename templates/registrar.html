@@ -80,6 +80,7 @@
                         </select>
                     </div>
 
+<<<<<<< HEAD
                      <div class="mb-3">
     <label>Sede</label>
 
@@ -106,6 +107,17 @@
 
     </select>
                      </div>
+=======
+                    <div class="mb-3">
+                        <label>Sede</label>
+                        <select name="sede" class="form-select" required>
+                            <option value="">Seleccione...</option>
+                            {% for sede in sede_options %}
+                            <option value="{{ sede.id_sede }}" {{ 'selected' if form_data is defined and (form_data.sede|int) == sede.id_sede else '' }}>{{ sede.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+>>>>>>> 2aa49040e8cd7a2851e4e7595758c03d841c201c
 
                     <div class="mb-3">
                         <label>Carrera</label>
@@ -129,6 +141,7 @@
                      <div class="mb-3">
     <label>Jornada</label>
 
+<<<<<<< HEAD
     <select name="id_jornada"
             id="jornada"
             class="form-select">
@@ -148,6 +161,16 @@
         {% endfor %}
 
     </select>
+=======
+                    <div class="mb-3">
+                        <label>Jornada</label>
+                        <select name="id_jornada" class="form-select">
+                            <option value="">Seleccione...</option>
+                            {% for j in jornadas_options %}
+                                <option value="{{ j.id_jornada }}" {{ 'selected' if form_data is defined and (form_data.id_jornada|int) == j.id_jornada else '' }}>{{ j.nombre }}</option>
+                            {% endfor %}
+                        </select>
+>>>>>>> 2aa49040e8cd7a2851e4e7595758c03d841c201c
                     </div>
 
                 </div>
@@ -234,7 +257,11 @@
 ========================= */
 const video = document.getElementById("video");
 const ipcam = document.getElementById("ipcam");
+<<<<<<< HEAD
 const IPCAM_URL = "http://192.168.0.12:4747/video"; // Cambia esta IP según tu red
+=======
+const IPCAM_URL = "http://192.168.1.85:4747/video"; // Cambia esta IP según tu red
+>>>>>>> 2aa49040e8cd7a2851e4e7595758c03d841c201c
 
 let currentStream = null;
 
