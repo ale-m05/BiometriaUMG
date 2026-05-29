@@ -216,9 +216,9 @@ def register_registro_routes(app):
         jornadas_options = get_jornadas_options()
         return render_template('registrar.html', usuario=usuario, carrera_options=[], seccion_options=[], sede_options=sede_options, jornadas_options=jornadas_options)
 
-        @app.route('/api/jornadas_por_sede_carrera')
-        def api_jornadas_por_sede_carrera():
-            id_sede = request.args.get('id_sede')
-            carrera = request.args.get('carrera')
-            jornadas = get_jornadas_for_sede_carrera(id_sede, carrera) if id_sede and carrera else []
-            return jsonify({'jornadas': jornadas})
+    @app.route('/api/jornadas_por_sede_carrera')
+    def api_jornadas_por_sede_carrera():
+        id_sede = request.args.get('id_sede')
+        carrera = request.args.get('carrera')
+        jornadas = get_jornadas_for_sede_carrera(id_sede, carrera) if id_sede and carrera else []
+        return jsonify({'jornadas': jornadas})

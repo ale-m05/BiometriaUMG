@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 8.0.45, for Win64 (x86_64)
+-- MySQL dump 10.13  Distrib 8.0.41, for Win64 (x86_64)
 --
--- Host: 127.0.0.1    Database: sistema_biometrico_umg
+-- Host: localhost    Database: biometria
 -- ------------------------------------------------------
--- Server version	8.0.45
+-- Server version	8.0.41
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -25,11 +25,11 @@ DROP TABLE IF EXISTS `accesos_biometricos`;
 CREATE TABLE `accesos_biometricos` (
   `id_acceso` int NOT NULL AUTO_INCREMENT,
   `id_persona` int DEFAULT NULL,
-  `tipo_acceso` enum('entrada_principal','salon') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `tipo_acceso` enum('entrada_principal','salon') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `id_salon` int DEFAULT NULL,
   `fecha_hora` datetime DEFAULT CURRENT_TIMESTAMP,
   `similitud` decimal(5,2) DEFAULT NULL,
-  `resultado` enum('aceptado','rechazado') COLLATE utf8mb4_unicode_ci DEFAULT 'aceptado',
+  `resultado` enum('aceptado','rechazado') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'aceptado',
   PRIMARY KEY (`id_acceso`),
   KEY `id_persona` (`id_persona`),
   KEY `id_salon` (`id_salon`),
@@ -60,7 +60,7 @@ CREATE TABLE `asignacion_cursos` (
   `id_curso` int NOT NULL,
   `id_rol_persona` int NOT NULL,
   `id_seccion` int NOT NULL,
-  `ciclo` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `ciclo` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `anio` year DEFAULT NULL,
   `id_salon` int DEFAULT NULL,
   `id_jornada` int DEFAULT NULL,
@@ -99,10 +99,10 @@ CREATE TABLE `asistencias` (
   `id_inscripcion` int NOT NULL,
   `fecha` date NOT NULL,
   `hora_entrada` time DEFAULT NULL,
-  `estado` enum('presente','ausente','tarde') COLLATE utf8mb4_unicode_ci DEFAULT 'presente',
-  `metodo_registro` enum('facial','manual') COLLATE utf8mb4_unicode_ci DEFAULT 'facial',
+  `estado` enum('presente','ausente','tarde') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'presente',
+  `metodo_registro` enum('facial','manual') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'facial',
   `confirmada_docente` tinyint(1) DEFAULT '0',
-  `observaciones` text COLLATE utf8mb4_unicode_ci,
+  `observaciones` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   PRIMARY KEY (`id_asistencia`),
   KEY `id_inscripcion` (`id_inscripcion`),
   KEY `idx_asistencia_fecha` (`fecha`),
@@ -198,8 +198,8 @@ DROP TABLE IF EXISTS `carnets`;
 CREATE TABLE `carnets` (
   `id_carnet` int NOT NULL AUTO_INCREMENT,
   `id_persona` int NOT NULL,
-  `codigo_qr` text COLLATE utf8mb4_unicode_ci,
-  `pdf_path` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `codigo_qr` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `pdf_path` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `fecha_generacion` datetime DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id_carnet`),
   KEY `id_persona` (`id_persona`),
@@ -225,11 +225,11 @@ DROP TABLE IF EXISTS `carreras`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `carreras` (
   `id_carrera` int NOT NULL AUTO_INCREMENT,
-  `nombre` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `descripcion` text COLLATE utf8mb4_unicode_ci,
+  `nombre` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `descripcion` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   PRIMARY KEY (`id_carrera`),
   UNIQUE KEY `nombre` (`nombre`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -238,7 +238,7 @@ CREATE TABLE `carreras` (
 
 LOCK TABLES `carreras` WRITE;
 /*!40000 ALTER TABLE `carreras` DISABLE KEYS */;
-INSERT INTO `carreras` VALUES (1,'Ingeniería en Sistemas',NULL),(2,'Derecho',NULL),(3,'Medicina',NULL);
+INSERT INTO `carreras` VALUES (1,'Ingeniería en Sistemas de Información y Ciencias de la Computación',NULL),(2,'Derecho y Notariado',NULL),(3,'Ingeniería Industrial',NULL),(4,'Administración de Empresas',NULL),(5,'Ingeniería Mecánica',NULL),(6,'Ingeniería Electrónica',NULL),(7,'Contaduría Pública y Auditoría',NULL),(8,'Ciencias Jurídicas y Sociales',NULL),(9,'Psicología Educativa',NULL),(10,'Psicología General',NULL);
 /*!40000 ALTER TABLE `carreras` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -251,8 +251,8 @@ DROP TABLE IF EXISTS `cursos`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `cursos` (
   `id_curso` int NOT NULL AUTO_INCREMENT,
-  `nombre` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `codigo` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `nombre` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `codigo` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `creditos` int DEFAULT '0',
   `id_sede_carrera` int DEFAULT NULL,
   PRIMARY KEY (`id_curso`),
@@ -285,7 +285,7 @@ CREATE TABLE `horarios` (
   `id_asignacion` int NOT NULL,
   `id_salon` int NOT NULL,
   `id_jornada` int NOT NULL,
-  `dia_semana` enum('lunes','martes','miercoles','jueves','viernes','sabado') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `dia_semana` enum('lunes','martes','miercoles','jueves','viernes','sabado') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `hora_inicio` time NOT NULL,
   `hora_fin` time NOT NULL,
   PRIMARY KEY (`id_horario`),
@@ -346,8 +346,8 @@ DROP TABLE IF EXISTS `jornadas`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `jornadas` (
   `id_jornada` int NOT NULL AUTO_INCREMENT,
-  `nombre` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `descripcion` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `nombre` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `descripcion` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id_jornada`),
   UNIQUE KEY `nombre` (`nombre`)
 ) ENGINE=InnoDB AUTO_INCREMENT=47 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -389,7 +389,7 @@ CREATE TABLE `jornadas_sedes` (
 
 LOCK TABLES `jornadas_sedes` WRITE;
 /*!40000 ALTER TABLE `jornadas_sedes` DISABLE KEYS */;
-INSERT INTO `jornadas_sedes` VALUES (4,36,1);
+INSERT INTO `jornadas_sedes` VALUES (4,3,1);
 /*!40000 ALTER TABLE `jornadas_sedes` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -402,17 +402,17 @@ DROP TABLE IF EXISTS `personas`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `personas` (
   `id_persona` int NOT NULL AUTO_INCREMENT,
-  `nombre` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `apellido` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `dpi` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `carnet` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `telefono` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `correo_personal` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `correo_institucional` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `nombre` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `apellido` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `dpi` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `carnet` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `telefono` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `correo_personal` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `correo_institucional` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `foto` longblob,
   `firma` longblob,
-  `encoding_facial` longtext COLLATE utf8mb4_unicode_ci,
-  `estado` enum('activo','inactivo','restringido') COLLATE utf8mb4_unicode_ci DEFAULT 'activo',
+  `encoding_facial` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `estado` enum('activo','inactivo','restringido') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'activo',
   `fecha_registro` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id_persona`),
   UNIQUE KEY `dpi` (`dpi`),
@@ -443,8 +443,8 @@ CREATE TABLE `reconocimiento_logs` (
   `id_log` int NOT NULL AUTO_INCREMENT,
   `id_persona` int DEFAULT NULL,
   `similitud` decimal(5,2) DEFAULT NULL,
-  `resultado` enum('reconocido','no_reconocido') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `imagen_capturada` longtext COLLATE utf8mb4_unicode_ci,
+  `resultado` enum('reconocido','no_reconocido') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `imagen_capturada` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `fecha` datetime DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id_log`),
   KEY `id_persona` (`id_persona`),
@@ -472,7 +472,7 @@ CREATE TABLE `reportes` (
   `id_reporte` int NOT NULL AUTO_INCREMENT,
   `id_asignacion` int DEFAULT NULL,
   `fecha_generacion` datetime DEFAULT CURRENT_TIMESTAMP,
-  `pdf_path` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `pdf_path` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id_reporte`),
   KEY `id_asignacion` (`id_asignacion`),
   CONSTRAINT `reportes_ibfk_1` FOREIGN KEY (`id_asignacion`) REFERENCES `asignacion_cursos` (`id_asignacion`) ON DELETE SET NULL
@@ -497,7 +497,7 @@ DROP TABLE IF EXISTS `roles`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `roles` (
   `id_rol` int NOT NULL AUTO_INCREMENT,
-  `nombre` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `nombre` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   PRIMARY KEY (`id_rol`),
   UNIQUE KEY `nombre` (`nombre`)
 ) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -554,12 +554,12 @@ DROP TABLE IF EXISTS `salones`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `salones` (
   `id_salon` int NOT NULL AUTO_INCREMENT,
-  `nombre` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `nombre` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `capacidad` int DEFAULT '40',
   `id_sede` int NOT NULL,
-  `codigo` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `ubicacion` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `descripcion` text COLLATE utf8mb4_unicode_ci,
+  `codigo` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `ubicacion` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `descripcion` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `id_carrera` int DEFAULT NULL,
   `id_jornada` int DEFAULT NULL,
   PRIMARY KEY (`id_salon`),
@@ -591,7 +591,7 @@ DROP TABLE IF EXISTS `secciones`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `secciones` (
   `id_seccion` int NOT NULL AUTO_INCREMENT,
-  `nombre` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `nombre` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   PRIMARY KEY (`id_seccion`),
   UNIQUE KEY `nombre` (`nombre`)
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -623,7 +623,7 @@ CREATE TABLE `sede_carrera` (
   KEY `id_carrera` (`id_carrera`),
   CONSTRAINT `sede_carrera_ibfk_1` FOREIGN KEY (`id_sede`) REFERENCES `sedes` (`id_sede`) ON DELETE CASCADE,
   CONSTRAINT `sede_carrera_ibfk_2` FOREIGN KEY (`id_carrera`) REFERENCES `carreras` (`id_carrera`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -632,7 +632,7 @@ CREATE TABLE `sede_carrera` (
 
 LOCK TABLES `sede_carrera` WRITE;
 /*!40000 ALTER TABLE `sede_carrera` DISABLE KEYS */;
-INSERT INTO `sede_carrera` VALUES (1,1,1),(2,1,2);
+INSERT INTO `sede_carrera` VALUES (1,1,8),(2,1,3),(3,1,4),(4,1,1),(5,1,7),(6,2,4),(7,2,1),(8,2,8),(9,2,7),(10,2,4),(11,3,1),(12,3,4),(13,3,8),(14,3,7),(15,3,3),(16,4,1),(17,4,4),(18,4,7),(19,4,8),(20,5,4),(21,5,8),(22,5,7),(23,5,1);
 /*!40000 ALTER TABLE `sede_carrera` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -645,12 +645,12 @@ DROP TABLE IF EXISTS `sedes`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `sedes` (
   `id_sede` int NOT NULL AUTO_INCREMENT,
-  `nombre` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `direccion` text COLLATE utf8mb4_unicode_ci,
-  `telefono` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `nombre` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `direccion` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `telefono` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id_sede`),
   UNIQUE KEY `nombre` (`nombre`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -659,7 +659,7 @@ CREATE TABLE `sedes` (
 
 LOCK TABLES `sedes` WRITE;
 /*!40000 ALTER TABLE `sedes` DISABLE KEYS */;
-INSERT INTO `sedes` VALUES (1,'UMG Boca del Monte',NULL,NULL),(2,'UMG Villa Nueva',NULL,NULL),(3,'UMG Antigua Guatemala',NULL,NULL);
+INSERT INTO `sedes` VALUES (1,'UMG Boca del Monte',NULL,NULL),(2,'UMG Villa Nueva',NULL,NULL),(3,'UMG Antigua Guatemala',NULL,NULL),(4,'UMG El Naranjo',NULL,NULL),(5,'Campus Huehuetenango UMG',NULL,NULL),(6,'Campus Jutiapa UMG',NULL,NULL),(7,'Campus Quetzaltenango UMG',NULL,NULL),(8,'',NULL,NULL);
 /*!40000 ALTER TABLE `sedes` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -679,7 +679,7 @@ CREATE TABLE `sedes_carreras_jornadas` (
   KEY `fk_scj_jornada` (`id_jornada`),
   CONSTRAINT `fk_scj_jornada` FOREIGN KEY (`id_jornada`) REFERENCES `jornadas` (`id_jornada`),
   CONSTRAINT `fk_scj_sede_carrera` FOREIGN KEY (`id_sede_carrera`) REFERENCES `sede_carrera` (`id_sede_carrera`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -688,7 +688,7 @@ CREATE TABLE `sedes_carreras_jornadas` (
 
 LOCK TABLES `sedes_carreras_jornadas` WRITE;
 /*!40000 ALTER TABLE `sedes_carreras_jornadas` DISABLE KEYS */;
-INSERT INTO `sedes_carreras_jornadas` VALUES (1,1,36);
+INSERT INTO `sedes_carreras_jornadas` VALUES (1,1,1),(2,1,2),(3,1,3),(4,1,4),(5,2,1),(6,2,36),(7,2,4),(8,3,1),(9,3,2),(10,3,3),(11,3,4),(12,3,36),(15,4,1),(16,4,36),(17,5,1),(18,5,2),(19,5,3),(20,5,4);
 /*!40000 ALTER TABLE `sedes_carreras_jornadas` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -702,8 +702,8 @@ DROP TABLE IF EXISTS `usuarios`;
 CREATE TABLE `usuarios` (
   `id_usuario` int NOT NULL AUTO_INCREMENT,
   `id_persona` int NOT NULL,
-  `username` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `password` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `username` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `password` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `ultimo_login` datetime DEFAULT NULL,
   PRIMARY KEY (`id_usuario`),
   UNIQUE KEY `username` (`username`),
@@ -731,4 +731,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-05-27 22:27:01
+-- Dump completed on 2026-05-28 21:28:24

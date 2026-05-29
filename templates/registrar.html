@@ -80,15 +80,32 @@
                         </select>
                     </div>
 
-                    <div class="mb-3">
-                        <label>Sede</label>
-                        <select name="sede" class="form-select" required>
-                            <option value="">Seleccione...</option>
-                            {% for sede in sede_options %}
-                            <option value="{{ sede.id_sede }}" {{ 'selected' if form_data is defined and form_data.sede == sede.id_sede|string else '' }}>{{ sede.nombre }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
+                     <div class="mb-3">
+    <label>Sede</label>
+
+    <select name="sede"
+            id="sede"
+            class="form-select"
+            required>
+
+        <option value="">Seleccione...</option>
+
+        {% for sede in sede_options %}
+
+        <option value="{{ sede.id_sede }}"
+            {{ 'selected'
+            if form_data is defined
+            and form_data.sede == sede.id_sede|string
+            else '' }}>
+
+            {{ sede.nombre }}
+
+        </option>
+
+        {% endfor %}
+
+    </select>
+                     </div>
 
                     <div class="mb-3">
                         <label>Carrera</label>
@@ -109,15 +126,28 @@
                             {% endfor %}
                         </select>
                     </div>
+                     <div class="mb-3">
+    <label>Jornada</label>
 
-                    <div class="mb-3">
-                        <label>Jornada</label>
-                        <select name="id_jornada" class="form-select">
-                            <option value="">Seleccione...</option>
-                            {% for j in jornadas_options %}
-                                <option value="{{ j.id_jornada }}" {{ 'selected' if form_data is defined and form_data.id_jornada == j.id_jornada|string else '' }}>{{ j.nombre }}</option>
-                            {% endfor %}
-                        </select>
+    <select name="id_jornada"
+            id="jornada"
+            class="form-select">
+
+        <option value="">Seleccione...</option>
+
+        {% for j in jornadas_options %}
+            <option value="{{ j.id_jornada }}"
+                {{ 'selected'
+                if form_data is defined
+                and form_data.id_jornada == j.id_jornada|string
+                else '' }}>
+
+                {{ j.nombre }}
+
+            </option>
+        {% endfor %}
+
+    </select>
                     </div>
 
                 </div>
@@ -441,6 +471,44 @@ document.addEventListener('DOMContentLoaded', function() {
     // cargar si ya hay valores seleccionados
     actualizarJornadas();
 });
+
+
+/* =========================
+   para seleccionar sede
+========================= */
+document.getElementById("sede")
+.addEventListener("change", function () {
+
+    let idSede = this.value;
+
+    let jornadaSelect =
+        document.getElementById("jornada");
+
+    jornadaSelect.innerHTML =
+        '<option value="">Cargando...</option>';
+
+    fetch(`/obtener_jornadas/${idSede}`)
+
+        .then(response => response.json())
+
+        .then(data => {
+
+            jornadaSelect.innerHTML =
+                '<option value="">Seleccione...</option>';
+
+            data.forEach(jornada => {
+
+                jornadaSelect.innerHTML += `
+                    <option value="${jornada.id_jornada}">
+                        ${jornada.nombre}
+                    </option>
+                `;
+            });
+
+        });
+
+});
+
 
 </script>
 
