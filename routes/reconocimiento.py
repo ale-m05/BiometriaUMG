@@ -2,7 +2,8 @@ import json
 import threading
 import time
 from datetime import date, datetime, timedelta
-
+import os
+os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = "rtsp_transport;tcp|timeout;5000000"
 import cv2
 import face_recognition
 import numpy as np
@@ -32,6 +33,7 @@ JPEG_QUALITY = 45
 
 cam_state = {}
 last_log_time = {}
+camera_threads = {}
 state_lock = threading.Lock()
 
 
@@ -52,6 +54,16 @@ def init_cam_state():
             },
             'last_log_time': last_log_time,
         }
+
+
+def ensure_camera_thread(cam_id, source):
+    thread = camera_threads.get(cam_id)
+    if thread and thread.is_alive():
+        return False
+    t = threading.Thread(target=camera_loop, args=(cam_id, source), daemon=True)
+    t.start()
+    camera_threads[cam_id] = t
+    return True
 
 
 init_cam_state()
@@ -105,33 +117,55 @@ if not KNOWN_ENCODINGS:
     print('⚠ No hay encodings en la base de datos (personas.activo con encoding_facial).')
 
 
-def registrar_entrada(id_persona, ubicacion):
+def registrar_entrada(id_persona, ubicacion, similitud=None):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cutoff_time = (datetime.now() - timedelta(seconds=MIN_SECONDS_BETWEEN_LOGS)).time()
-    cursor.execute(
-        """
-            SELECT COUNT(*)
-            FROM registros_entrada
-            WHERE id_persona = %s
-              AND ubicacion = %s
-              AND fecha = %s
-              AND hora >= %s
-        """,
-        (id_persona, ubicacion, date.today(), cutoff_time)
-    )
-    already_logged = cursor.fetchone()[0]
-    if already_logged == 0:
-        cursor.execute(
-            "INSERT INTO registros_entrada (id_persona, ubicacion, fecha, hora, tipo_registro) VALUES (%s, %s, %s, %s, %s)",
-            (id_persona, ubicacion, date.today(), time.strftime('%H:%M:%S'), TIPO_REGISTRO)
-        )
-        conn.commit()
-    else:
-        print(f'Entrada ya registrada recientemente para persona={id_persona} ubicacion={ubicacion}')
-    cursor.close()
-    conn.close()
 
+    try:
+        # Evitar duplicados recientes en la puerta principal
+        cutoff = datetime.now() - timedelta(seconds=MIN_SECONDS_BETWEEN_LOGS)
+
+        cursor.execute(
+            """
+            SELECT COUNT(*)
+            FROM accesos_biometricos
+            WHERE id_persona = %s
+              AND tipo_acceso = %s
+              AND fecha_hora >= %s
+            """,
+            (id_persona, TIPO_REGISTRO, cutoff)
+        )
+
+        already_logged = cursor.fetchone()[0]
+
+        if already_logged == 0:
+            cursor.execute(
+    """
+    INSERT INTO accesos_biometricos
+        (id_persona, tipo_acceso, id_salon, fecha_hora, similitud, resultado)
+    VALUES
+        (%s, %s, %s, %s, %s, %s)
+    """,
+    (
+        id_persona,
+        'entrada_principal',
+        None,
+        datetime.now(),
+        similitud,
+        'aceptado'
+    )
+)
+            conn.commit()
+            print(f'Entrada registrada para persona={id_persona} ubicacion={ubicacion}')
+        else:
+            print(f'Entrada ya registrada recientemente para persona={id_persona}')
+
+    except Exception as e:
+        print('Error registrando entrada:', e)
+
+    finally:
+        cursor.close()
+        conn.close()
 
 def resolve_asignacion_for_camera(cam_id, ts=None):
     """Resolver una asignacion activa para la cámara en el timestamp dado.
@@ -257,11 +291,10 @@ def registrar_asistencia(id_persona, id_asignacion):
 
 
 def open_camera(source):
-    if isinstance(source, int):
-        cap = cv2.VideoCapture(source, cv2.CAP_DSHOW)
-    else:
-        cap = cv2.VideoCapture(source, cv2.CAP_FFMPEG)
-    cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+    if str(source).isdigit():
+        return cv2.VideoCapture(int(source), cv2.CAP_DSHOW)
+
+    cap = cv2.VideoCapture(source, cv2.CAP_FFMPEG)
     return cap
 
 
@@ -314,7 +347,7 @@ def camera_loop(cam_id, source):
                     if now_ts - last_ts >= MIN_SECONDS_BETWEEN_LOGS:
                         try:
                             ubicacion_real = CAMERAS[cam_id]['ubicacion']
-                            registrar_entrada(pid, ubicacion=ubicacion_real)
+                            registrar_entrada(pid, ubicacion=ubicacion_real, similitud=round(best_distance, 4))
                             # actualizar timestamp y registrar asistencia vinculada a asignacion (si existe)
                             with state_lock:
                                 cam_state[cam_id]['last_log_time'][pid] = now_ts
@@ -381,11 +414,21 @@ def register_reconocimiento_routes(app):
     @app.route('/video_feed/<cam_id>')
     def video_feed(cam_id):
         if cam_id not in CAMERAS:
+            try:
+                load_cameras_from_db()
+            except Exception:
+                pass
+        if cam_id not in CAMERAS:
             return 'Cámara no existe', 404
         return Response(mjpeg_generator(cam_id), mimetype='multipart/x-mixed-replace; boundary=frame')
 
     @app.route('/last_match/<cam_id>')
     def last_match(cam_id):
+        if cam_id not in CAMERAS:
+            try:
+                load_cameras_from_db()
+            except Exception:
+                pass
         if cam_id not in CAMERAS:
             return jsonify({'error': 'Cámara no existe'}), 404
         with state_lock:
@@ -393,6 +436,11 @@ def register_reconocimiento_routes(app):
 
     @app.route('/monitor/<cam_id>')
     def monitor(cam_id):
+        if cam_id not in CAMERAS:
+            try:
+                load_cameras_from_db()
+            except Exception:
+                pass
         if cam_id not in CAMERAS:
             return 'Cámara no existe', 404
         usuario = obtener_usuario_sesion()
@@ -414,17 +462,32 @@ def register_reconocimiento_routes(app):
     def api_cameras():
         conn = get_db_connection()
         cur = conn.cursor(dictionary=True)
-        cur.execute('SELECT cam_id, nombre, source, id_sede, descripcion FROM camaras')
+        cur.execute("SELECT cam_id, nombre, source, id_sede, descripcion FROM camaras WHERE source IS NOT NULL AND source <> ''")
         rows = cur.fetchall()
         cur.close(); conn.close()
         return jsonify(rows)
 
     @app.route('/api/refresh_cameras')
     def api_refresh_cameras():
-        # reload CAMERAS from DB
+        # reload CAMERAS from DB and ensure camera threads exist
         try:
             load_cameras_from_db()
             return jsonify({'ok': True})
+        except Exception as e:
+            return jsonify({'ok': False, 'error': str(e)}), 500
+
+    @app.route('/api/restart_camera/<cam_id>')
+    def api_restart_camera(cam_id):
+        if cam_id not in CAMERAS:
+            try:
+                load_cameras_from_db()
+            except Exception:
+                pass
+        if cam_id not in CAMERAS:
+            return jsonify({'ok': False, 'error': 'Cámara no existe'}), 404
+        try:
+            restarted = ensure_camera_thread(cam_id, CAMERAS[cam_id].get('source'))
+            return jsonify({'ok': True, 'restarted': restarted})
         except Exception as e:
             return jsonify({'ok': False, 'error': str(e)}), 500
 
@@ -436,15 +499,14 @@ def start_camera_threads():
     except Exception:
         pass
     for cam_id, cam_data in CAMERAS.items():
-        t = threading.Thread(target=camera_loop, args=(cam_id, cam_data.get('source')), daemon=True)
-        t.start()
+        ensure_camera_thread(cam_id, cam_data.get('source'))
 
 
 def load_cameras_from_db():
     global CAMERAS
     conn = get_db_connection()
     cur = conn.cursor(dictionary=True)
-    cur.execute('SELECT cam_id, nombre, source, id_sede, descripcion FROM camaras')
+    cur.execute("SELECT cam_id, nombre, source, id_sede, descripcion FROM camaras WHERE source IS NOT NULL AND source <> ''")
     rows = cur.fetchall()
     cur.close(); conn.close()
     cams = {}
@@ -479,3 +541,5 @@ def load_cameras_from_db():
                     },
                     'last_log_time': last_log_time,
                 }
+    for cam_id, cam_data in CAMERAS.items():
+        ensure_camera_thread(cam_id, cam_data.get('source'))
