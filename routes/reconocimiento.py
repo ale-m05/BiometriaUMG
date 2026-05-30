@@ -4,7 +4,10 @@ import time
 from datetime import date, datetime, timedelta
 
 import cv2
-import face_recognition
+try:
+    import face_recognition
+except ImportError:
+    face_recognition = None
 import numpy as np
 from flask import Response, jsonify, render_template
 

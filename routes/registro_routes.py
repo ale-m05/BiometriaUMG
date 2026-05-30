@@ -5,7 +5,10 @@ import re
 from datetime import date, datetime
 
 import cv2
-import face_recognition
+try:
+    import face_recognition
+except ImportError:
+    face_recognition = None
 from flask import render_template, request, redirect, url_for, session, flash, jsonify
 
 from database import get_db_connection

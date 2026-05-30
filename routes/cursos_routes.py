@@ -241,7 +241,7 @@ def register_cursos_routes(app):
 
         usuario = obtener_usuario_sesion()
         conexion = get_db_connection()
-        cursor = conexion.cursor()
+        cursor = conexion.cursor(dictionary=True)
 
         form_data = {}
 
@@ -250,8 +250,9 @@ def register_cursos_routes(app):
             codigo = request.form.get('codigo', '').strip()
             creditos = request.form.get('creditos', '0')
             id_sede_carrera = request.form.get('id_sede_carrera', '')
+            id_jornada = request.form.get('id_jornada', '')
 
-            form_data = {'nombre': nombre, 'codigo': codigo, 'creditos': creditos, 'id_sede_carrera': id_sede_carrera}
+            form_data = {'nombre': nombre, 'codigo': codigo, 'creditos': creditos, 'id_sede_carrera': id_sede_carrera, 'id_jornada': id_jornada}
 
             if not nombre:
                 flash('El nombre del curso es requerido', 'danger')
@@ -259,6 +260,8 @@ def register_cursos_routes(app):
                 flash('El código del curso es requerido', 'danger')
             elif not id_sede_carrera:
                 flash('Debe seleccionar una sede y carrera', 'danger')
+            elif not id_jornada:
+                flash('Debe seleccionar una jornada', 'danger')
             else:
                 try:
                     creditos_int = int(creditos) if creditos else 0
@@ -286,12 +289,29 @@ def register_cursos_routes(app):
         except Exception:
             sede_carrera_options = []
 
+        # Obtener jornadas con sus sedes y carreras
+        try:
+            cursor.execute('''
+                SELECT scj.id_sede_carrera_jornada, sc.id_sede_carrera, j.id_jornada, j.nombre as jornada_nombre,
+                       CONCAT(s.nombre, ' - ', c.nombre, ' - ', j.nombre) as display_name
+                FROM sedes_carreras_jornadas scj
+                JOIN sede_carrera sc ON scj.id_sede_carrera = sc.id_sede_carrera
+                JOIN jornadas j ON scj.id_jornada = j.id_jornada
+                JOIN sedes s ON sc.id_sede = s.id_sede
+                JOIN carreras c ON sc.id_carrera = c.id_carrera
+                ORDER BY s.nombre, c.nombre, j.nombre
+            ''')
+            jornada_sede_carrera_options = cursor.fetchall()
+        except Exception:
+            jornada_sede_carrera_options = []
+
         cursor.close()
         conexion.close()
 
         return render_template('admin/cursos_crear.html',
                              usuario=usuario,
                              sede_carrera_options=sede_carrera_options,
+                             jornada_sede_carrera_options=jornada_sede_carrera_options,
                              form_data=form_data)
 
     @app.route('/admin/cursos/listar', methods=['GET'])
