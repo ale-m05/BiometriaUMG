@@ -207,7 +207,7 @@ def register_registro_routes(app):
                 )
 
             try:
-                pdf_bytes = generate_id_card_pdf(nombre, apellido, correo, imagen_bytes, carnet, id_persona, firma)
+                pdf_bytes = generate_id_card_pdf(nombre, apellido, correo, imagen_bytes, carnet, id_persona, seccion, firma)
                 if pdf_bytes:
                     send_ok, send_err = send_email_with_pdf(correo, pdf_bytes, f'carnet_{id_persona}.pdf')
                     if send_ok:
